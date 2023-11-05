@@ -85,16 +85,21 @@ update_click_count_label()
 window.bind("<Button-1>", record_click)
 window.bind("<Motion>", record_mouse_position)
 
+SERVER_IP = "192.168.0.2"
 
 # Function to send mouse data to the server
 async def send_mouse_data():
-    async with websockets.connect('ws://192.168.0.2:8765') as websocket:
-        while capture_active:
-            data = {
-                "click_count": click_count,
-                "mouse_position": mouse_position
-            }
-            await websocket.send(json.dumps(data))
+    async with websockets.connect(f"ws://{SERVER_IP}:8765") as websocket:
+        while True:
+            if capture_active:
+                data = {
+                    "click_count": click_count,
+                    "mouse_position": {
+                        "x" : mouse_position[0],
+                        "y" : mouse_position[1]
+                    }
+                }
+                await websocket.send(json.dumps(data))
             await asyncio.sleep(0.1)
 
 # Create a task for the main function

@@ -2,8 +2,10 @@ import asyncio
 import websockets
 import json
 
+SERVER_IP = "192.168.0.2"
+
 async def handle_client(websocket, path):
-    
+
     while True:
         data = await websocket.recv()
         data_dict = json.loads(data)
@@ -13,8 +15,8 @@ async def handle_client(websocket, path):
         print(f"Received Data - Mouse Position: X={x}, Y={y}")
 
 # Create a WebSocket server
-start_server = websockets.serve(handle_client, "localhost", 8765)
-print('running server localhost:8765')
+start_server = websockets.serve(handle_client, SERVER_IP, 8765)
+print(f"running server {SERVER_IP}:8765")
 
 # Run the server
 loop = asyncio.get_event_loop()
