@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+import pyautogui
 
 SERVER_IP = "192.168.0.2"
 
@@ -13,6 +14,9 @@ async def handle_client(websocket, path):
         x = mouse_position.get("x", 0)
         y = mouse_position.get("y", 0)
         print(f"Received Data - Mouse Position: X={x}, Y={y}")
+        if x != 0 and y != 0:
+            pyautogui.moveTo(x, y) 
+        
 
 # Create a WebSocket server
 start_server = websockets.serve(handle_client, SERVER_IP, 8765)

@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import json
 import tkinter as tk
+from tkinter import messagebox
 import pyautogui
 import threading
 
@@ -89,18 +90,22 @@ SERVER_IP = "192.168.0.2"
 
 # Function to send mouse data to the server
 async def send_mouse_data():
-    async with websockets.connect(f"ws://{SERVER_IP}:8765") as websocket:
-        while True:
-            if capture_active:
-                data = {
-                    "click_count": click_count,
-                    "mouse_position": {
-                        "x" : mouse_position[0],
-                        "y" : mouse_position[1]
+    try:            
+        async with websockets.connect(f"ws://{SERVER_IP}:8765") as websocket:
+            while True:
+                if capture_active:
+                    data = {
+                        "click_count": click_count,
+                        "mouse_position": {
+                            "x" : mouse_position[0],
+                            "y" : mouse_position[1]
+                        }
                     }
-                }
-                await websocket.send(json.dumps(data))
-            await asyncio.sleep(0.1)
+                    await websocket.send(json.dumps(data))
+                await asyncio.sleep(0.1)
+    except ConnectionRefusedError as e:
+        print(e)
+        messagebox.showerror("Error de Conexion", e) 
 
 # Create a task for the main function
 async def main_task():
