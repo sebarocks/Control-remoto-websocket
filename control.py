@@ -3,7 +3,6 @@ import websockets
 import json
 import tkinter as tk
 from tkinter import messagebox
-import pyautogui
 import threading
 
 # Global variable to track whether the capture is active
@@ -14,40 +13,36 @@ click_count = 0
 mouse_position = (0, 0)
 
 def resizeXY(x,y):
-    x_resize = ( x - window.winfo_x() ) # // window.winfo_width()
-    y_resize = ( y - window.winfo_y() ) # // window.winfo_height()
+    x_resize =  x / 600 
+    y_resize =  y / 480 
     return x_resize, y_resize
 
 
-# Function to update the global mouse_position variable
-def record_mouse_position(event):
+# Function to handle mouse motion within the canvas area
+def on_canvas_motion(event):
     global mouse_position
-    x, y = pyautogui.position()
-    mouse_position = resizeXY(x,y)
+    if capture_active:
+        x, y = event.x, event.y
+        mouse_position = resizeXY(x, y)
 
-# Function to handle mouse click events and update the click count
-def record_click(event):
-    global click_count
-    click_count += 1
+# Function to handle mouse clicks within the canvas area
+def on_canvas_click(event):
+    if capture_active:
+        global click_count
+        click_count += 1
 
-# Function to start/stop capturing and toggle the button text
+# Function to toggle mouse capture
 def toggle_capture():
     global capture_active
     if capture_active:
         capture_active = False
         capture_button.config(text="Start Capture")
-        window.unbind("<Escape>")
+        canvas.config(bg="lightgray")  # Change the canvas color to indicate inactive state
     else:
         capture_active = True
         capture_button.config(text="Stop Capture")
-        window.bind("<Escape>", stop_capture)
+        canvas.config(bg="green")  # Change the canvas color to indicate active state
 
-def stop_capture(event):
-    global capture_active
-    capture_active = False
-    capture_button.config(text="Start Capture")
-    window.config(cursor="")
-    window.unbind("<Escape>")  # Unbind the Escape key
 
 def update_mouse_position_label():
     if capture_active:
@@ -63,7 +58,7 @@ def update_click_count_label():
 
 # Create a Tkinter window with an 800x600 size
 window = tk.Tk()
-window.geometry("800x600")
+window.geometry("600x580")
 window.title("Mouse Movement Capture")
 
 # Create a label for displaying mouse coordinates
@@ -78,22 +73,28 @@ click_count_label.pack()
 capture_button = tk.Button(window, text="Start Capture", command=toggle_capture)
 capture_button.pack()
 
+# Create a canvas below the button for the rectangular area
+canvas = tk.Canvas(window, bg="lightgray", width=600, height=480)
+canvas.pack()
+
 # Start updating mouse position and click count in real-time
 update_mouse_position_label()
 update_click_count_label()
 
-# Bind mouse click events to the record_click function
-window.bind("<Button-1>", record_click)
-window.bind("<Motion>", record_mouse_position)
+# Bind mouse motion and clicks within the canvas area
+canvas.bind("<Motion>", on_canvas_motion)
+canvas.bind("<Button-1>", on_canvas_click)
 
 SERVER_IP = "192.168.0.2"
 
 # Function to send mouse data to the server
 async def send_mouse_data():
+    
     try:            
         async with websockets.connect(f"ws://{SERVER_IP}:8765") as websocket:
-            while True:
+            while True:                
                 if capture_active:
+                    global click_count
                     data = {
                         "click_count": click_count,
                         "mouse_position": {
@@ -102,6 +103,7 @@ async def send_mouse_data():
                         }
                     }
                     await websocket.send(json.dumps(data))
+                    click_count = 0
                 await asyncio.sleep(0.1)
     except ConnectionRefusedError as e:
         print(e)

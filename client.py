@@ -5,17 +5,29 @@ import pyautogui
 
 SERVER_IP = "192.168.0.2"
 
+SCREEN_SIZE = pyautogui.size()
+
+def translate_position(x,y):
+    global SCREEN_SIZE
+    x_screen = int(SCREEN_SIZE[0] * x)
+    y_screen = int(SCREEN_SIZE[1] * y)
+    return (x_screen, y_screen)
+
 async def handle_client(websocket, path):
 
     while True:
         data = await websocket.recv()
         data_dict = json.loads(data)
         mouse_position = data_dict.get("mouse_position", {})
+        clicks = data_dict.get("click_count")
         x = mouse_position.get("x", 0)
         y = mouse_position.get("y", 0)
-        print(f"Received Data - Mouse Position: X={x}, Y={y}")
+        print(f"Received Data: X={x}, Y={y}, Clicks={clicks}")
         if x != 0 and y != 0:
-            pyautogui.moveTo(x, y) 
+            m_pos = translate_position(x,y)
+            pyautogui.moveTo(m_pos[0], m_pos[1])
+        if clicks > 0:
+            pyautogui.click(clicks=clicks)
         
 
 # Create a WebSocket server
