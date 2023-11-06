@@ -3,7 +3,12 @@ import websockets
 import json
 import pyautogui
 
+import sys
+
 SERVER_IP = "192.168.0.2"
+
+if len(sys.argv) > 1:
+    SERVER_IP = sys.argv[1]
 
 SCREEN_SIZE = pyautogui.size()
 

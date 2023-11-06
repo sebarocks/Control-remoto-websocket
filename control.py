@@ -4,6 +4,12 @@ import json
 import tkinter as tk
 from tkinter import messagebox
 import threading
+import sys
+
+SERVER_IP = "192.168.0.2"
+
+if len(sys.argv) > 1:
+    SERVER_IP = sys.argv[1]
 
 # Global variable to track whether the capture is active
 capture_active = False
@@ -85,12 +91,11 @@ update_click_count_label()
 canvas.bind("<Motion>", on_canvas_motion)
 canvas.bind("<Button-1>", on_canvas_click)
 
-SERVER_IP = "192.168.0.2"
 
 # Function to send mouse data to the server
 async def send_mouse_data():
-    
-    try:            
+    print(f"connecting to server: {SERVER_IP}")
+    try:
         async with websockets.connect(f"ws://{SERVER_IP}:8765") as websocket:
             while True:                
                 if capture_active:
